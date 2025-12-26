@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guru Berbagi - Selogiri | Optimalisasi IFP</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2D8B83;
+            --primary-dark: #1F6660;
+            --accent: #f59e0b;
+            --text-dark: #1e293b;
+            --bg-light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .navbar-brand img { height: 40px; }
+        .nav-link { font-weight: 600; color: var(--text-dark); margin: 0 10px; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .btn-cta { background-color: var(--primary); color: white; border-radius: 50px; padding: 10px 25px; font-weight: 700; border: none; transition: 0.3s; }
+        .btn-cta:hover { background-color: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(45, 139, 131, 0.3); }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 100px 0 60px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #fff 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-title { font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; background: linear-gradient(to right, var(--primary-dark), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-subtitle { font-size: 1.2rem; color: #64748b; margin-bottom: 30px; line-height: 1.6; }
+        
+        .hero-image-wrapper {
+            position: relative;
+            perspective: 1000px;
+        }
+        .app-screenshot {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.2);
+            transform: rotateY(-5deg) rotateX(2deg);
+            transition: transform 0.5s ease;
+            border: 8px solid white;
+        }
+        .app-screenshot:hover { transform: rotateY(0) rotateX(0); }
+
+        /* Section Styling */
+        .section-padding { padding: 80px 0; }
+        .section-title { font-weight: 800; text-align: center; margin-bottom: 50px; font-size: 2.2rem; position: relative; }
+        .section-title::after { content: ''; display: block; width: 60px; height: 4px; background: var(--accent); margin: 15px auto 0; border-radius: 2px; }
+        .bg-light-alt { background-color: var(--bg-light); }
+
+        /* Cards */
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            height: 100%;
+            transition: 0.3s;
+            border: 1px solid #f1f5f9;
+        }
+        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-color: var(--primary); }
+        .icon-box { width: 60px; height: 60px; background: #e0f2f1; color: var(--primary); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 20px; }
+
+        /* Changelog Table */
+        .changelog-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .table-changelog th { background: var(--text-dark); color: white; padding: 15px; border: none; }
+        .table-changelog td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+        .badge-new { background-color: var(--accent); color: white; padding: 5px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; }
+
+        /* IFP Section */
+        .ifp-box { background: var(--text-dark); color: white; border-radius: 24px; padding: 40px; position: relative; overflow: hidden; }
+        .ifp-box::before { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--primary); opacity: 0.2; border-radius: 50%; filter: blur(50px); }
+
+        /* Footer */
+        footer { background: #0f172a; color: #94a3b8; padding: 40px 0; text-align: center; }
+        footer p { margin: 0; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <img src="https://i.imgur.com/4PToETN.png" alt="Logo">
+                <div class="lh-1">
+                    <div class="fw-bold text-dark">GURU BERBAGI</div>
+                    <small class="text-muted" style="font-size: 0.7rem;">Kec. Selogiri</small>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#tentang">Tentang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#fitur">Fitur</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#changelog">Pembaruan</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a href="#" class="btn btn-cta">Buka Aplikasi <i class="fas fa-arrow-right ms-2"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <span class="badge bg-soft-teal text-primary mb-3 px-3 py-2 rounded-pill fw-bold border border-primary-subtle">
+                        <i class="fas fa-rocket me-2"></i>Versi Stabil 26 (2025)
+                    </span>
+                    <h1 class="hero-title">Ekosistem Konten Interaktif untuk Kelas Masa Depan</h1>
+                    <p class="hero-subtitle">
+                        Ubah Interactive Flat Panel (IFP) Anda menjadi pusat pembelajaran yang hidup. Bukan sekadar proyektor, tapi sumber inspirasi tanpa batas.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-cta btn-lg shadow-lg">Mulai Jelajahi</a>
+                        <a href="#tentang" class="btn btn-outline-dark btn-lg rounded-pill fw-bold px-4">Pelajari Lebih Lanjut</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image-wrapper">
+                        <img src="https://i.imgur.com/Q1IKWOs.png" alt="Tampilan Aplikasi Guru Berbagi" class="app-screenshot">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tentang" class="section-padding bg-light-alt">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center mb-5">
+                    <h2 class="section-title">Mengapa Aplikasi Ini Penting?</h2>
+                    <p class="lead text-muted">Aplikasi ini hadir sebagai <strong>"Suplai Bahan Bakar Digital"</strong> untuk memastikan investasi alat Interactive Flat Panel (IFP) di sekolah tidak sia-sia.</p>
+                </div>
+            </div>
+
+            <div class="ifp-box shadow-lg">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <h3 class="fw-bold mb-4"><i class="fas fa-tv me-2 text-warning"></i>Optimalisasi IFP</h3>
+                        <ul class="list-unstyled d-flex flex-column gap-3">
+                            <li class="d-flex gap-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <div><strong>Pusat Interaksi:</strong> Menyediakan materi HTML Embed dan Game yang bisa dimainkan dengan sentuhan layar.</div>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <div><strong>Layar Penuh Sempurna:</strong> Konten ditampilkan dalam resolusi tinggi tanpa gangguan menu browser.</div>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <div><strong>Teknologi AI Visual:</strong> Menampilkan Storybook Gemini yang imersif di layar lebar.</div>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <i class="fas fa-check-circle text-success mt-1"></i>
+                                <div><strong>Efisiensi Waktu:</strong> Fitur Scan QR Code langsung di layar untuk menghubungkan siswa.</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-5 text-center mt-4 mt-md-0">
+                        <i class="fas fa-chalkboard-teacher fa-10x opacity-25 text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="fitur" class="section-padding">
+        <div class="container">
+            <h2 class="section-title">Fitur Unggulan</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-images"></i></div>
+                        <h5>Galeri Karya</h5>
+                        <p class="text-muted small">Katalog karya guru (Video, Modul, Game) yang rapi dan mudah diakses.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-search"></i></div>
+                        <h5>Pencarian Pintar</h5>
+                        <p class="text-muted small">Cari materi berdasarkan judul, mapel, atau nama guru dalam hitungan detik.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-robot"></i></div>
+                        <h5>Integrasi AI</h5>
+                        <p class="text-muted small">Dukungan penuh untuk konten Storybook buatan Gemini AI yang interaktif.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-qrcode"></i></div>
+                        <h5>QR Code Instan</h5>
+                        <p class="text-muted small">Hubungkan perangkat siswa dengan materi di layar depan secara otomatis.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-expand"></i></div>
+                        <h5>Mode Layar Penuh</h5>
+                        <p class="text-muted small">Tampilan fokus tanpa gangguan, optimal untuk proyektor dan IFP.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                        <h5>Sistem Kurasi</h5>
+                        <p class="text-muted small">Kualitas konten terjaga melalui proses review oleh Admin/Moderator.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-heart"></i></div>
+                        <h5>Koleksi Favorit</h5>
+                        <p class="text-muted small">Simpan materi terbaik rekan Anda ke dalam daftar pribadi.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="icon-box"><i class="fas fa-upload"></i></div>
+                        <h5>Berbagi Mudah</h5>
+                        <p class="text-muted small">Formulir upload yang simpel untuk berbagai jenis media pembelajaran.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="changelog" class="section-padding bg-light-alt">
+        <div class="container">
+            <h2 class="section-title">Catatan Pembaruan <span class="badge bg-primary fs-6 align-middle">v1.0 (Stable 26)</span></h2>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="changelog-card">
+                        <table class="table table-changelog mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="25%">Fitur / Bagian</th>
+                                    <th width="35%" class="text-white-50">Kondisi Sebelumnya</th>
+                                    <th width="40%">Perbaikan Terbaru <i class="fas fa-check-circle ms-1"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold">Buka Storybook (AI)</td>
+                                    <td class="text-muted">Sering error "Refused to connect" atau diblokir Google.</td>
+                                    <td><span class="badge-new">LANCAR</span> Tombol khusus & Salin Link otomatis agar akses 100% berhasil.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Layar Penuh (Fullscreen)</td>
+                                    <td class="text-muted">Video YouTube macet atau layar putih (blank).</td>
+                                    <td><span class="badge-new">OPTIMAL</span> Membuka link asli yang aman & stabil untuk semua media.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Identitas Kategori</td>
+                                    <td class="text-muted">Ikon standar dan warna seragam.</td>
+                                    <td><span class="badge-new">VISUAL</span> Ikon "Orang Baca Buku" warna Oranye untuk Storybook.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Pilihan Semester</td>
+                                    <td class="text-muted">Manual (harus ubah kode).</td>
+                                    <td><span class="badge-new">OTOMATIS</span> Mengambil data langsung dari pengaturan Spreadsheet.</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Kestabilan Sistem</td>
+                                    <td class="text-muted">Error jika judul ada tanda kutip.</td>
+                                    <td><span class="badge-new">ROBUST</span> Anti-macet dengan sistem pembersih teks otomatis.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="mb-4">
+                <img src="https://i.imgur.com/4PToETN.png" alt="Logo" style="height: 50px; opacity: 0.8;">
+            </div>
+            <p>&copy; 2025 Korwilcambidik Kecamatan Selogiri. Dibuat dengan <i class="fas fa-heart text-danger"></i> untuk Pendidikan Indonesia.</p>
+            <p class="text-muted small mt-2">Versi Aplikasi: Stable 26</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script
