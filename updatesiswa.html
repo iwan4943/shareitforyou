@@ -3,115 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Siswa Selogiri 2026</title>
+    <title>Rekap Data Siswa Kecamatan Selogiri</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     
     <style>
-        body { background-color: #f4f6f9; }
-        .card-header { font-weight: bold; }
+        body { background-color: #f4f6f9; font-size: 0.9rem; }
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
+            background: rgba(255,255,255,0.9); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
         }
         .hidden { display: none !important; }
-        /* Style Tabel Input agar tidak terlalu lebar */
-        .input-cell { width: 70px; }
-        .input-cell input { text-align: center; }
         
+        /* Utility Colors */
+        .bg-gender { background-color: #e3f2fd; } 
+        .bg-agama { background-color: #fff3cd; }
+        .fw-bolder { font-weight: 800 !important; }
+
+        /* Scrollable List & Table */
+        .table-scroll-container { overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; }
+        .list-scroll { max-height: 250px; overflow-y: auto; }
+
+        /* Print Settings */
         @media print {
-            .no-print { display: none; }
-            .card { border: none; shadow: none; }
+            @page { size: landscape; margin: 5mm; }
+            .no-print { display: none !important; }
+            body { background-color: white; font-size: 8pt; }
+            .card { border: none !important; shadow: none !important; }
+            .list-scroll { max-height: none; overflow: visible; } 
+            .table-scroll-container { overflow: visible; display: block; }
+            table { width: 100%; border-collapse: collapse; }
         }
     </style>
 </head>
 <body>
 
 <div id="loading" class="loading-overlay">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 fw-bold text-primary">Memuat Data...</div>
 </div>
 
-<nav class="navbar navbar-dark bg-primary mb-4 no-print">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1"><i class="fas fa-school me-2"></i>Data Siswa Selogiri 2026</span>
-        <div>
-            <span class="badge bg-warning text-dark me-2" id="statusBadge">Checking...</span>
-            <button class="btn btn-sm btn-light" onclick="showPage('dashboard')">Dashboard</button>
-            <button class="btn btn-sm btn-light" onclick="showPage('login')">Input Data</button>
-        </div>
+<nav class="navbar navbar-dark bg-primary mb-3 no-print">
+    <div class="container-fluid px-4">
+        <span class="navbar-brand mb-0 h1"><i class="fas fa-database me-2"></i>Rekap Data Siswa Selogiri 2026</span>
+        <span class="badge bg-light text-primary" id="statusBadge">Checking...</span>
     </div>
 </nav>
 
-<div class="container mb-5">
+<div class="container-fluid px-4 mb-5">
     
     <div id="page-dashboard">
-        <div class="row mb-3">
-            <div class="col-md-8">
-                <h3>Dashboard Rekapitulasi</h3>
-                <p class="text-muted">Data real-time Kecamatan Selogiri</p>
+        
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <h3 class="fw-bold text-primary">Dashboard Rekapitulasi</h3>
+                <p class="text-muted mb-0">Data Realtime Satuan Pendidikan</p>
             </div>
-            <div class="col-md-4 text-end no-print">
-                <button onclick="exportExcel()" class="btn btn-success"><i class="fas fa-file-excel"></i> Excel</button>
-                <button onclick="window.print()" class="btn btn-secondary"><i class="fas fa-print"></i> PDF</button>
+            <div class="col-md-6 text-end no-print">
+                <button onclick="showPage('login')" class="btn btn-success shadow me-2">
+                    <i class="fas fa-plus-circle me-1"></i> INPUT DATA
+                </button>
+                <div class="btn-group">
+                    <button onclick="exportExcel()" class="btn btn-outline-success"><i class="fas fa-file-excel me-1"></i> Unduh Excel</button>
+                    <button onclick="window.print()" class="btn btn-outline-secondary"><i class="fas fa-print me-1"></i> Cetak PDF</button>
+                </div>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-md-3"><div class="card text-white bg-primary mb-3"><div class="card-body">
-                <h5 class="card-title">Total Siswa</h5><h2 id="dash-total">0</h2>
+            <div class="col-6 col-lg-3"><div class="card bg-primary text-white mb-2"><div class="card-body text-center p-3">
+                <small>Total Siswa</small><h2 id="dash-total" class="fw-bold m-0">0</h2>
             </div></div></div>
-            <div class="col-md-3"><div class="card text-white bg-info mb-3"><div class="card-body">
-                <h5 class="card-title">Laki-laki</h5><h2 id="dash-l">0</h2>
+            <div class="col-6 col-lg-3"><div class="card bg-info text-white mb-2"><div class="card-body text-center p-3">
+                <small>Laki-laki</small><h2 id="dash-l" class="fw-bold m-0">0</h2>
             </div></div></div>
-            <div class="col-md-3"><div class="card text-white bg-danger mb-3"><div class="card-body">
-                <h5 class="card-title">Perempuan</h5><h2 id="dash-p">0</h2>
+            <div class="col-6 col-lg-3"><div class="card bg-danger text-white mb-2"><div class="card-body text-center p-3">
+                <small>Perempuan</small><h2 id="dash-p" class="fw-bold m-0">0</h2>
             </div></div></div>
-            <div class="col-md-3"><div class="card text-white bg-success mb-3"><div class="card-body">
-                <h5 class="card-title">Sekolah Input</h5><h2 id="dash-schools">0/0</h2>
+            <div class="col-6 col-lg-3"><div class="card bg-secondary text-white mb-2"><div class="card-body text-center p-3">
+                <small>Progres Input</small><h2 id="dash-schools" class="fw-bold m-0">0</h2>
             </div></div></div>
         </div>
 
-        <div class="card">
-            <div class="card-header">Rincian Per Sekolah</div>
-            <div class="card-body table-responsive">
-                <table class="table table-bordered table-striped table-sm" id="table-rekap">
-                    <thead class="table-light">
+        <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 border-success shadow-sm">
+                    <div class="card-header bg-success text-white d-flex justify-content-between">
+                        <span class="fw-bold"><i class="fas fa-check-circle me-2"></i>SUDAH MENGIRIM</span>
+                        <span class="badge bg-white text-success" id="count-sudah">0</span>
+                    </div>
+                    <div class="card-body p-0 list-scroll">
+                        <ul class="list-group list-group-flush" id="list-sudah">
+                            </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 border-danger shadow-sm">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between">
+                        <span class="fw-bold"><i class="fas fa-times-circle me-2"></i>BELUM MENGIRIM</span>
+                        <span class="badge bg-white text-danger" id="count-belum">0</span>
+                    </div>
+                    <div class="card-body p-0 list-scroll">
+                        <ul class="list-group list-group-flush" id="list-belum">
+                            </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold text-uppercase">
+                <i class="fas fa-layer-group me-2"></i>Rekapitulasi Per Tingkat Kelas
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-bordered table-sm text-center mb-0 table-striped" id="table-grade">
+                    <thead class="table-dark">
                         <tr>
-                            <th>NPSN</th>
-                            <th>Nama Sekolah</th>
-                            <th>Total L</th>
-                            <th>Total P</th>
-                            <th>Total Siswa</th>
-                            <th>Update Terakhir</th>
+                            <th>Kelas</th><th>L</th><th>P</th><th>Total</th>
+                            <th>Islam</th><th>Kristen</th><th>Katolik</th><th>Hindu</th><th>Buddha</th><th>Konghucu</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
+                    <tfoot class="table-secondary fw-bold"></tfoot>
                 </table>
             </div>
         </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold text-uppercase d-flex justify-content-between">
+                <span><i class="fas fa-table me-2"></i>Rincian Lengkap Per Sekolah</span>
+                <span class="badge bg-warning text-dark no-print">Geser kanan &raquo;</span>
+            </div>
+            <div class="table-scroll-container">
+                <table class="table table-bordered table-hover table-sm text-center mb-0" id="table-master">
+                    <thead></thead><tbody></tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <div id="page-login" class="hidden">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">Login Operator Sekolah</div>
-                    <div class="card-body">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white text-center"><h5 class="mb-0">Login Operator</h5></div>
+                    <div class="card-body p-4">
+                        <button onclick="showPage('dashboard')" class="btn btn-sm btn-link mb-3 text-decoration-none"><i class="fas fa-arrow-left"></i> Kembali</button>
                         <div class="mb-3">
-                            <label>Pilih Sekolah</label>
-                            <select id="login-npsn" class="form-select">
-                                <option value="">-- Pilih Sekolah --</option>
-                            </select>
+                            <label class="fw-bold">Pilih Sekolah</label>
+                            <select id="login-npsn" class="form-select form-select-lg"></select>
                         </div>
-                        <div class="mb-3">
-                            <label>Password / Token</label>
-                            <input type="password" id="login-pass" class="form-control" placeholder="Masukkan token sekolah">
+                        <div class="mb-4">
+                            <label class="fw-bold">Token / Password</label>
+                            <input type="password" id="login-pass" class="form-control form-control-lg">
                         </div>
-                        <button onclick="loginProcess()" class="btn btn-primary w-100">Masuk & Edit Data</button>
+                        <button onclick="loginProcess()" class="btn btn-primary w-100 btn-lg">Masuk</button>
                     </div>
                 </div>
             </div>
@@ -119,269 +169,296 @@
     </div>
 
     <div id="page-form" class="hidden">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 id="form-school-name">Nama Sekolah</h4>
-            <button onclick="showPage('dashboard')" class="btn btn-outline-secondary btn-sm">Kembali</button>
-        </div>
-
-        <form id="dataForm" onsubmit="event.preventDefault(); submitData();">
-            <input type="hidden" id="input-npsn">
-            <input type="hidden" id="input-nama">
-            <input type="hidden" id="input-pass">
-
-            <div class="accordion mb-4" id="accordionKelas">
+        <div class="sticky-top bg-white py-2 border-bottom shadow-sm mb-3">
+            <div class="container d-flex justify-content-between align-items-center">
+                <h5 class="m-0 text-primary" id="form-school-name">Sekolah</h5>
+                <div>
+                    <button onclick="showPage('dashboard')" class="btn btn-outline-secondary btn-sm me-2">Batal</button>
+                    <button onclick="submitData()" class="btn btn-success btn-sm px-4 fw-bold" id="btn-save-top">SIMPAN</button>
                 </div>
-
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg" id="btn-save">
-                    <i class="fas fa-save"></i> SIMPAN DATA
-                </button>
             </div>
-        </form>
+        </div>
+        <div class="container">
+            <form id="dataForm">
+                <input type="hidden" id="input-npsn">
+                <input type="hidden" id="input-nama">
+                <input type="hidden" id="input-pass">
+                <div class="accordion mb-4" id="accordionKelas"></div>
+                <button type="button" onclick="submitData()" class="btn btn-success w-100 btn-lg mb-5 shadow" id="btn-save-bottom">SIMPAN DATA</button>
+            </form>
+        </div>
     </div>
 
 </div>
 
 <script>
-    // --- KONFIGURASI ---
-    const API_URL = "https://script.google.com/macros/s/AKfycbwdSmfNRko0h7CZKiI3Ge8po3JXKDDJLs_Kn2Ht5fEXBksTcGjMbUdChOTr1Dg1D-3Y/exec"; 
+    // --- GANTI URL INI ---
+    const API_URL = "https://script.google.com/macros/s/AKfycbwdSmfNRko0h7CZKiI3Ge8po3JXKDDJLs_Kn2Ht5fEXBksTcGjMbUdChOTr1Dg1D-3Y/exec";
     
-    let GLOBAL_DATA = {
-        schools: [],
-        rekap: [],
-        config: {}
-    };
+    let GLOBAL_DATA = { schools: [], rekap: [], config: {} };
+    const ATTRIBUTES = ["L", "P", "Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"];
 
-    // --- INITIALIZATION ---
-    window.onload = function() {
-        fetchData();
-    };
+    window.onload = function() { fetchData(); };
 
     async function fetchData() {
-        document.getElementById('loading').classList.remove('hidden');
         try {
-            const response = await fetch(API_URL + "?action=getInitData");
-            const result = await response.json();
+            const res = await fetch(API_URL + "?action=getInitData");
+            const data = await res.json();
+            GLOBAL_DATA = data;
             
-            GLOBAL_DATA = result;
-            
-            // Setup Dropdown Sekolah
-            const select = document.getElementById('login-npsn');
-            select.innerHTML = '<option value="">-- Pilih Sekolah --</option>';
-            result.schools.forEach(s => {
+            // Dropdown & Status
+            const sel = document.getElementById('login-npsn');
+            sel.innerHTML = '<option value="">-- Pilih --</option>';
+            data.schools.forEach(s => {
                 let opt = document.createElement('option');
-                opt.value = s[0]; // NPSN
-                opt.text = s[1];  // Nama Sekolah
-                select.add(opt);
+                opt.value = s[0]; opt.text = s[1]; sel.add(opt);
             });
 
-            // Setup Status Form
             const badge = document.getElementById('statusBadge');
-            if(result.config.Status_Form === 'LOCKED') {
-                badge.className = "badge bg-danger me-2";
-                badge.innerText = "FORM LOCKED";
-                document.getElementById('btn-save').disabled = true;
-                document.getElementById('btn-save').innerText = "Form Ditutup Admin";
-            } else {
-                badge.className = "badge bg-success me-2";
-                badge.innerText = "FORM OPEN";
-            }
+            badge.innerText = (data.config.Status_Form === 'LOCKED') ? "LOCKED" : "OPEN";
+            badge.className = (data.config.Status_Form === 'LOCKED') ? "badge bg-danger" : "badge bg-success";
 
-            renderDashboard();
+            renderDashboardComponents();
             generateFormHTML();
-            
-        } catch (error) {
-            alert("Gagal mengambil data: " + error);
-        } finally {
-            document.getElementById('loading').classList.add('hidden');
-        }
+        } catch (e) { alert("Gagal memuat data. Periksa koneksi."); } 
+        finally { document.getElementById('loading').classList.add('hidden'); }
     }
 
-    // --- NAVIGATION ---
-    function showPage(pageId) {
-        document.getElementById('page-dashboard').classList.add('hidden');
-        document.getElementById('page-login').classList.add('hidden');
-        document.getElementById('page-form').classList.add('hidden');
-        
-        document.getElementById('page-' + pageId).classList.remove('hidden');
+    function showPage(id) {
+        ['dashboard','login','form'].forEach(p => document.getElementById('page-'+p).classList.add('hidden'));
+        document.getElementById('page-'+id).classList.remove('hidden');
+        window.scrollTo(0,0);
     }
 
-    // --- DASHBOARD LOGIC ---
-    function renderDashboard() {
-        const tbody = document.querySelector('#table-rekap tbody');
-        tbody.innerHTML = '';
+    function renderDashboardComponents() {
+        renderStatusList(); // Render List Sudah/Belum
         
-        let grandTotal = 0, totalL = 0, totalP = 0;
-        let schoolCount = 0;
-
-        GLOBAL_DATA.rekap.forEach(item => {
-            const d = item.data;
-            // Struktur d: [Timestamp, NPSN, Nama, Update, k1_L, k1_P, ...]
-            // Index k1_L mulai dari 4. 
-            // Total kolom per kelas = 8.
-            
-            let rowL = 0, rowP = 0;
-            // Hitung L (Index 4, 12, 20, 28, 36, 44)
-            for(let i=0; i<6; i++) rowL += parseInt(d[4 + (i*8)] || 0);
-            // Hitung P (Index 5, 13, 21, 29, 37, 45)
-            for(let i=0; i<6; i++) rowP += parseInt(d[5 + (i*8)] || 0);
-            
-            let rowTotal = rowL + rowP;
-
-            grandTotal += rowTotal;
-            totalL += rowL;
-            totalP += rowP;
-            schoolCount++;
-
-            let tr = `<tr>
-                <td>${d[1]}</td>
-                <td>${d[2]}</td>
-                <td class="text-center">${rowL}</td>
-                <td class="text-center">${rowP}</td>
-                <td class="text-center fw-bold">${rowTotal}</td>
-                <td class="small text-muted">${new Date(d[3]).toLocaleDateString()}</td>
-            </tr>`;
-            tbody.innerHTML += tr;
+        const rekap = GLOBAL_DATA.rekap;
+        // Hitung Total Ringkasan
+        let totalL=0, totalP=0;
+        rekap.forEach(r => {
+            const d = r.data;
+            for(let i=1; i<=6; i++) {
+                let sIdx = 4 + ((i-1)*8);
+                totalL += parseInt(d[sIdx]||0);
+                totalP += parseInt(d[sIdx+1]||0);
+            }
         });
-
-        document.getElementById('dash-total').innerText = grandTotal;
+        
+        document.getElementById('dash-total').innerText = totalL + totalP;
         document.getElementById('dash-l').innerText = totalL;
         document.getElementById('dash-p').innerText = totalP;
-        document.getElementById('dash-schools').innerText = `${schoolCount} / ${GLOBAL_DATA.schools.length}`;
+        document.getElementById('dash-schools').innerText = `${rekap.length} / ${GLOBAL_DATA.schools.length}`;
+
+        renderGradeSummary(rekap);
+        renderMasterTable(rekap);
     }
 
-    // --- LOGIN & LOAD FORM ---
+    // --- FUNGSI BARU: STATUS SUDAH/BELUM ---
+    function renderStatusList() {
+        const submittedNPSN = GLOBAL_DATA.rekap.map(r => String(r.npsn));
+        const ulSudah = document.getElementById('list-sudah');
+        const ulBelum = document.getElementById('list-belum');
+        ulSudah.innerHTML = ''; ulBelum.innerHTML = '';
+
+        let countSudah = 0;
+        let countBelum = 0;
+
+        GLOBAL_DATA.schools.forEach(school => {
+            const npsn = String(school[0]);
+            const nama = school[1];
+
+            if(submittedNPSN.includes(npsn)) {
+                // Ambil waktu update
+                const row = GLOBAL_DATA.rekap.find(r => String(r.npsn) === npsn);
+                const time = row ? new Date(row.data[3]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+                
+                ulSudah.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center small">
+                        <span><i class="fas fa-check text-success me-2"></i>${nama}</span>
+                        <span class="badge bg-light text-dark border">${time}</span>
+                    </li>`;
+                countSudah++;
+            } else {
+                ulBelum.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center small">
+                        <span><i class="fas fa-times text-danger me-2"></i>${nama}</span>
+                    </li>`;
+                countBelum++;
+            }
+        });
+
+        document.getElementById('count-sudah').innerText = countSudah;
+        document.getElementById('count-belum').innerText = countBelum;
+    }
+
+    function renderGradeSummary(rekap) {
+        const tbody = document.querySelector('#table-grade tbody');
+        const tfoot = document.querySelector('#table-grade tfoot');
+        tbody.innerHTML = ''; tfoot.innerHTML = '';
+        
+        let totals = { L:0, P:0, Islam:0, Kristen:0, Katolik:0, Hindu:0, Buddha:0, Konghucu:0, All:0 };
+
+        for(let i=1; i<=6; i++) {
+            let rs = { L:0, P:0, Islam:0, Kristen:0, Katolik:0, Hindu:0, Buddha:0, Konghucu:0 };
+            rekap.forEach(r => {
+                const d = r.data;
+                const sIdx = 4 + ((i-1)*8);
+                rs.L += parseInt(d[sIdx]||0); rs.P += parseInt(d[sIdx+1]||0);
+                rs.Islam += parseInt(d[sIdx+2]||0); rs.Kristen += parseInt(d[sIdx+3]||0);
+                rs.Katolik += parseInt(d[sIdx+4]||0); rs.Hindu += parseInt(d[sIdx+5]||0);
+                rs.Buddha += parseInt(d[sIdx+6]||0); rs.Konghucu += parseInt(d[sIdx+7]||0);
+            });
+            let rt = rs.L + rs.P;
+            for(let k in totals) if(k!=='All') totals[k] += rs[k];
+            totals.All += rt;
+
+            tbody.innerHTML += `<tr>
+                <td class="fw-bold">Kelas ${i}</td>
+                <td class="bg-gender">${rs.L}</td><td class="bg-gender">${rs.P}</td>
+                <td class="fw-bold bg-light border-start border-end">${rt}</td>
+                <td>${rs.Islam}</td><td>${rs.Kristen}</td><td>${rs.Katolik}</td>
+                <td>${rs.Hindu}</td><td>${rs.Buddha}</td><td>${rs.Konghucu}</td>
+            </tr>`;
+        }
+        tfoot.innerHTML = `<tr>
+            <td>TOTAL</td><td>${totals.L}</td><td>${totals.P}</td>
+            <td class="bg-dark text-white">${totals.All}</td>
+            <td>${totals.Islam}</td><td>${totals.Kristen}</td><td>${totals.Katolik}</td>
+            <td>${totals.Hindu}</td><td>${totals.Buddha}</td><td>${totals.Konghucu}</td>
+        </tr>`;
+    }
+
+    function renderMasterTable(rekap) {
+        const table = document.getElementById('table-master');
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        thead.innerHTML = ''; tbody.innerHTML = '';
+
+        let row1 = `<tr><th rowspan="2" class="align-middle bg-light sticky-col">NPSN</th><th rowspan="2" class="align-middle bg-light sticky-col-2">Nama Sekolah</th>`;
+        let row2 = `<tr>`;
+
+        for(let i=1; i<=6; i++) {
+            row1 += `<th colspan="8" class="text-center bg-secondary text-white border-start">KELAS ${i}</th>`;
+            ATTRIBUTES.forEach(a => {
+                let color = (a==='L'||a==='P') ? 'bg-gender' : 'bg-agama';
+                row2 += `<th class="${color}" style="font-size:11px;">${a}</th>`;
+            });
+        }
+        row1 += `<th colspan="3" class="text-center bg-dark text-white border-start">TOTAL SEKOLAH</th></tr>`;
+        row2 += `<th class="bg-gender">L</th><th class="bg-gender">P</th><th class="bg-dark text-white">JML</th></tr>`;
+        thead.innerHTML = row1 + row2;
+
+        rekap.forEach(r => {
+            const d = r.data;
+            let tr = `<tr><td class="fw-bold bg-light">${d[1]}</td><td class="text-start bg-light" style="min-width:150px;">${d[2]}</td>`;
+            let gL=0, gP=0;
+            for(let i=1; i<=6; i++) {
+                let idx = 4 + ((i-1)*8);
+                ATTRIBUTES.forEach((attr, k) => {
+                    let val = parseInt(d[idx+k]||0);
+                    if(attr==='L') gL += val; if(attr==='P') gP += val;
+                    let bg = (val === 0) ? 'text-muted' : (attr==='L'||attr==='P') ? 'fw-bold bg-gender' : '';
+                    tr += `<td class="${bg}">${val}</td>`;
+                });
+            }
+            tr += `<td class="fw-bold border-start">${gL}</td><td class="fw-bold">${gP}</td><td class="bg-dark text-white fw-bold">${gL+gP}</td></tr>`;
+            tbody.innerHTML += tr;
+        });
+    }
+
+    // --- FORM LOGIC ---
     function loginProcess() {
         const npsn = document.getElementById('login-npsn').value;
         const pass = document.getElementById('login-pass').value;
         const schoolName = document.getElementById('login-npsn').options[document.getElementById('login-npsn').selectedIndex].text;
-
-        if(!npsn || !pass) { alert("Lengkapi data!"); return; }
-
-        // Simpan sementara credentials
+        
+        if(!npsn || !pass) return alert("Isi lengkap!");
+        
         document.getElementById('input-npsn').value = npsn;
-        document.getElementById('input-nama').value = schoolName;
         document.getElementById('input-pass').value = pass;
-        document.getElementById('form-school-name').innerText = schoolName + " (NPSN: " + npsn + ")";
-
-        // Cek apakah sudah pernah input?
-        const existing = GLOBAL_DATA.rekap.find(r => String(r.npsn) === String(npsn));
+        document.getElementById('input-nama').value = schoolName;
+        document.getElementById('form-school-name').innerText = schoolName;
         
-        resetForm(); // Bersihkan form dulu
-        if(existing) {
-            fillForm(existing.data);
-            alert("Data lama ditemukan. Mode Edit.");
-        }
-
-        showPage('form');
-    }
-
-    // --- FORM GENERATOR ---
-    function generateFormHTML() {
-        const container = document.getElementById('accordionKelas');
-        container.innerHTML = '';
-        const attributes = ["L", "P", "Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"];
-        
-        for (let i = 1; i <= 6; i++) {
-            let html = `
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button ${i!==1?'collapsed':''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}">
-                        Kelas ${i}
-                    </button>
-                </h2>
-                <div id="collapse${i}" class="accordion-collapse collapse ${i===1?'show':''}" data-bs-parent="#accordionKelas">
-                    <div class="accordion-body">
-                        <div class="row g-2 align-items-center">
-            `;
-            
-            attributes.forEach(attr => {
-                let key = `k${i}_${attr}`;
-                let label = attr;
-                let bgClass = (attr === 'L') ? 'bg-info bg-opacity-10' : (attr === 'P') ? 'bg-danger bg-opacity-10' : '';
-                
-                html += `
-                <div class="col-6 col-md-3">
-                    <label class="small text-muted">${label}</label>
-                    <input type="number" name="${key}" id="${key}" class="form-control ${bgClass}" min="0" value="0">
-                </div>`;
-            });
-
-            html += `</div></div></div></div>`;
-            container.innerHTML += html;
-        }
-    }
-
-    function fillForm(dataArray) {
-        // dataArray mulai dari index 4 adalah k1_L
-        const attributes = ["L", "P", "Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"];
-        let dataIndex = 4;
-        
-        for (let i = 1; i <= 6; i++) {
-            attributes.forEach(attr => {
-                let key = `k${i}_${attr}`;
-                document.getElementById(key).value = dataArray[dataIndex] || 0;
-                dataIndex++;
-            });
-        }
-    }
-
-    function resetForm() {
-        const inputs = document.querySelectorAll('#dataForm input[type="number"]');
-        inputs.forEach(inp => inp.value = 0);
-    }
-
-    // --- SUBMIT DATA ---
-    async function submitData() {
-        if(!confirm("Simpan data ini? Pastikan data sudah benar.")) return;
-
-        const btn = document.getElementById('btn-save');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-
-        // Collect Data
-        const formData = {};
-        const inputs = document.querySelectorAll('#dataForm input[type="number"]');
-        inputs.forEach(inp => {
-            formData[inp.id] = inp.value;
-        });
-
-        const payload = {
-            npsn: document.getElementById('input-npsn').value,
-            nama_sekolah: document.getElementById('input-nama').value,
-            password: document.getElementById('input-pass').value,
-            formData: formData
-        };
-
-        try {
-            // Gunakan no-cors atau text/plain untuk trigger doPost GAS tanpa preflight CORS ribet
-            // Namun fetch post ke GAS perlu handle text response
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            
-            if(result.status === 'success') {
-                alert("Berhasil! Data tersimpan.");
-                location.reload(); // Refresh untuk update dashboard
-            } else {
-                alert("Gagal: " + result.message);
-                btn.disabled = false;
-                btn.innerHTML = 'SIMPAN DATA';
+        document.querySelectorAll('#dataForm input[type="number"]').forEach(i => i.value = 0);
+        const exist = GLOBAL_DATA.rekap.find(r => String(r.npsn) === String(npsn));
+        if(exist) {
+            let idx = 4;
+            for(let i=1; i<=6; i++) {
+                ATTRIBUTES.forEach(a => { document.getElementById(`k${i}_${a}`).value = exist.data[idx] || 0; idx++; });
+                calculateClass(i);
             }
-        } catch (err) {
-            alert("Error koneksi: " + err);
-            btn.disabled = false;
+        }
+        showPage('form');
+        for(let i=1; i<=6; i++) calculateClass(i);
+    }
+
+    function generateFormHTML() {
+        const c = document.getElementById('accordionKelas'); c.innerHTML = '';
+        for(let i=1; i<=6; i++) {
+            let html = `<div class="accordion-item shadow-sm mb-3"><h2 class="accordion-header"><button class="accordion-button ${i!=1?'collapsed':''}" type="button" data-bs-toggle="collapse" data-bs-target="#col${i}"><div class="d-flex w-100 justify-content-between align-items-center me-3"><span class="fw-bold">Kelas ${i}</span><span class="badge bg-secondary" id="bdg${i}">Total: 0</span></div></button></h2><div id="col${i}" class="accordion-collapse collapse ${i==1?'show':''}" data-bs-parent="#accordionKelas"><div class="accordion-body bg-light"><div class="alert alert-light border text-center p-2 mb-3" id="mon${i}"><small>Total Gender: <b id="tg${i}">0</b> | Total Agama: <b id="ta${i}">0</b></small></div><div class="row g-2">`;
+            ATTRIBUTES.forEach(a => {
+                let bg = (a=='L'||a=='P')?'bg-gender border-primary':'bg-agama border-warning';
+                html += `<div class="col-6 col-md-3"><label class="small text-muted mb-1">${a}</label><input type="number" id="k${i}_${a}" class="form-control text-center fw-bold ${bg}" min="0" value="0" oninput="calculateClass(${i})"></div>`;
+            });
+            c.innerHTML += html + `</div></div></div></div>`;
         }
     }
 
-    // --- EXPORT ---
+    function calculateClass(i) {
+        let l = parseInt(document.getElementById(`k${i}_L`).value)||0;
+        let p = parseInt(document.getElementById(`k${i}_P`).value)||0;
+        let tg = l + p;
+        let ta = 0; ["Islam","Kristen","Katolik","Hindu","Buddha","Konghucu"].forEach(a => ta += parseInt(document.getElementById(`k${i}_${a}`).value)||0);
+        document.getElementById(`tg${i}`).innerText = tg; document.getElementById(`ta${i}`).innerText = ta;
+        document.getElementById(`bdg${i}`).innerText = "Total: " + tg;
+        const mon = document.getElementById(`mon${i}`);
+        if(tg !== ta) { mon.className = "alert alert-danger border text-center p-2 mb-3"; mon.innerHTML += " (BEDA!)"; } 
+        else { mon.className = "alert alert-success border text-center p-2 mb-3"; }
+    }
+
+    async function submitData() {
+        if(!confirm("Simpan Data?")) return;
+        const btns = [document.getElementById('btn-save-top'), document.getElementById('btn-save-bottom')];
+        btns.forEach(b => {b.disabled=true; b.innerText="Sending...";});
+        
+        let formData = {};
+        document.querySelectorAll('#dataForm input[type="number"]').forEach(i => formData[i.id] = i.value);
+        
+        try {
+            await fetch(API_URL, { method:'POST', body: JSON.stringify({
+                npsn: document.getElementById('input-npsn').value,
+                password: document.getElementById('input-pass').value,
+                nama_sekolah: document.getElementById('input-nama').value,
+                formData: formData
+            })});
+            alert("Berhasil Tersimpan!"); location.reload();
+        } catch(e) { alert("Gagal: "+e); btns.forEach(b => {b.disabled=false; b.innerText="SIMPAN";}); }
+    }
+
     function exportExcel() {
-        const table = document.getElementById('table-rekap');
-        const wb = XLSX.utils.table_to_book(table, {sheet: "Rekap_Selogiri"});
-        XLSX.writeFile(wb, 'Rekap_Siswa_2026.xlsx');
+        const table = document.getElementById('table-master');
+        const wb = XLSX.utils.table_to_book(table, {sheet: "Data Lengkap"});
+        const tableGrade = document.getElementById('table-grade');
+        const wsGrade = XLSX.utils.table_to_sheet(tableGrade);
+        XLSX.utils.book_append_sheet(wb, wsGrade, "Rekap Tingkat");
+
+        // Tambah Sheet Status Pengiriman
+        let statusData = [["NPSN", "Nama Sekolah", "Status", "Waktu"]];
+        const submitted = GLOBAL_DATA.rekap.map(r => String(r.npsn));
+        GLOBAL_DATA.schools.forEach(s => {
+            let stat = "BELUM", time = "-";
+            if(submitted.includes(String(s[0]))) {
+                stat = "SUDAH";
+                let r = GLOBAL_DATA.rekap.find(x => String(x.npsn) == String(s[0]));
+                time = new Date(r.data[3]).toLocaleString();
+            }
+            statusData.push([s[0], s[1], stat, time]);
+        });
+        const wsStatus = XLSX.utils.aoa_to_sheet(statusData);
+        XLSX.utils.book_append_sheet(wb, wsStatus, "Status Pengiriman");
+
+        XLSX.writeFile(wb, 'Rekap_Siswa_Selogiri_2026.xlsx');
     }
 </script>
 
