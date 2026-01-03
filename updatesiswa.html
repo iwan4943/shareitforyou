@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rekap Selogiri 2026</title>
+    <title>Rekap Data Siswa Selogiri 2026</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     
     <style>
-        /* BASE STYLES */
-        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        /* === BASE STYLES === */
+        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         
         /* Loading Overlay */
         .loading-overlay {
@@ -19,49 +20,76 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
 
-        /* UTILITIES */
+        /* === UTILITY COLORS === */
         .hidden { display: none !important; }
-        .bg-gender { background-color: #e3f2fd; } 
-        .bg-agama { background-color: #fff3cd; }
+        .bg-gender { background-color: #e3f2fd; } /* Biru Muda */
+        .bg-agama { background-color: #fff3cd; }  /* Kuning Muda */
         
-        /* SCROLLABLE AREAS */
+        /* Warna Khusus Tabel Master */
+        .bg-subtotal { background-color: #e9ecef !important; font-weight: bold; color: #495057; }
+        .sticky-col { position: sticky; left: 0; z-index: 10; background-color: #fff; border-right: 2px solid #dee2e6; }
+
+        /* === TABLE STYLING === */
         .table-scroll-container { 
             overflow-x: auto; 
             -webkit-overflow-scrolling: touch; 
             white-space: nowrap; 
             border: 1px solid #dee2e6;
             background: white;
+            max-height: 80vh; /* Agar header sticky vertikal bekerja jika tabel sangat panjang */
         }
         
+        /* Footer Table (Total Bawah) */
+        tfoot {
+            position: sticky; bottom: 0; z-index: 15;
+            background-color: #343a40; 
+            color: white;
+            border-top: 3px solid #000;
+        }
+        tfoot td {
+            background-color: #343a40 !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        /* Sticky Column di Footer juga harus gelap */
+        tfoot .sticky-col {
+            background-color: #343a40 !important;
+            color: white !important;
+            z-index: 20; /* Lebih tinggi dari footer biasa */
+        }
+
+        /* Status List Box */
         .list-scroll { 
-            max-height: 300px; 
+            max-height: 250px; 
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
         }
 
-        /* MOBILE OPTIMIZATIONS */
+        /* === MOBILE OPTIMIZATIONS === */
         @media (max-width: 768px) {
             body { font-size: 14px; }
-            h3 { font-size: 1.5rem; }
-            .sticky-col { position: sticky; left: 0; z-index: 10; background-color: #f8f9fa; border-right: 2px solid #ddd; }
-            input[type="number"] { font-size: 16px; padding: 10px 5px; }
+            h4 { font-size: 1.2rem; }
+            input[type="number"] { font-size: 16px; padding: 10px; } /* Besar agar mudah disentuh */
+            .sticky-col { min-width: 100px; max-width: 120px; white-space: normal; font-size: 11px; }
         }
 
-        /* STICKY TOP FORM HEADER */
+        /* Sticky Form Header (Saat Input) */
         .sticky-form-header {
             position: sticky; top: 0; z-index: 1020;
             background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
-        /* PRINT STYLES */
+        /* === PRINT SETTINGS === */
         @media print {
             @page { size: landscape; margin: 5mm; }
             .no-print { display: none !important; }
-            body { background: white; font-size: 10pt; }
+            body { background: white; font-size: 9pt; }
             .card { border: none !important; box-shadow: none !important; }
-            .table-scroll-container { overflow: visible; display: block; border: none; }
+            .table-scroll-container { overflow: visible; display: block; border: none; max-height: none; }
             .list-scroll { max-height: none; }
+            tfoot { position: static; color: black; }
+            tfoot td { background-color: #ddd !important; color: black !important; }
         }
     </style>
 </head>
@@ -70,18 +98,19 @@
 <div id="loading" class="loading-overlay">
     <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
     <div class="mt-3 fw-bold text-dark">Memuat Data...</div>
+    <small class="text-muted">Sinkronisasi dengan Google Sheets</small>
 </div>
 
 <nav class="navbar navbar-dark bg-primary shadow-sm mb-4 no-print">
-    <div class="container-fluid">
+    <div class="container-fluid px-3">
         <span class="navbar-brand mb-0 h1">
-            <i class="fas fa-database me-2"></i>Data Siswa Selogiri 2026
+            <i class="fas fa-school me-2"></i>Rekap Data Siswa Selogiri 2026
         </span>
-        <span class="badge bg-white text-primary fw-bold shadow-sm" id="statusBadge">...</span>
+        <span class="badge bg-white text-primary fw-bold shadow-sm" id="statusBadge">Checking...</span>
     </div>
 </nav>
 
-<div class="container-fluid pb-5">
+<div class="container-fluid pb-5 px-3 px-md-4">
     
     <div id="page-dashboard">
         
@@ -89,17 +118,17 @@
             
             <div class="w-100 w-md-auto">
                 <h4 class="fw-bold text-primary mb-1">Dashboard Rekapitulasi</h4>
-                <p class="text-muted mb-3">Update Realtime Kecamatan Selogiri</p>
+                <p class="text-muted mb-3 small">Data Realtime Satuan Pendidikan</p>
                 
-                <button onclick="showPage('login')" class="btn btn-success btn-lg shadow fw-bold w-100 w-md-auto px-4">
-                    <i class="fas fa-plus-circle me-2"></i> INPUT DATA BARU
+                <button onclick="showPage('login')" class="btn btn-success btn-lg shadow fw-bold w-100 w-md-auto px-4 py-2">
+                    <i class="fas fa-edit me-2"></i> INPUT DATA BARU
                 </button>
             </div>
 
             <div class="no-print w-100 w-md-auto text-md-end">
-                <div class="btn-group w-100 w-md-auto">
-                    <button onclick="exportExcel()" class="btn btn-outline-success"><i class="fas fa-file-excel me-2"></i>Unduh Excel</button>
-                    <button onclick="window.print()" class="btn btn-outline-secondary"><i class="fas fa-print me-2"></i>Cetak PDF</button>
+                <div class="btn-group w-100 w-md-auto shadow-sm">
+                    <button onclick="exportExcel()" class="btn btn-outline-success bg-white"><i class="fas fa-file-excel me-2"></i>Unduh Excel</button>
+                    <button onclick="window.print()" class="btn btn-outline-secondary bg-white"><i class="fas fa-print me-2"></i>Cetak PDF</button>
                 </div>
             </div>
         </div>
@@ -108,32 +137,32 @@
             <div class="col-6 col-lg-3">
                 <div class="card bg-primary text-white h-100 shadow-sm border-0">
                     <div class="card-body p-3 text-center">
-                        <small class="opacity-75">Total Siswa</small>
-                        <h2 id="dash-total" class="fw-bold m-0">0</h2>
+                        <small class="opacity-75 text-uppercase fw-bold" style="font-size:10px">Total Siswa</small>
+                        <h2 id="dash-total" class="fw-bold m-0 mt-1">0</h2>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card bg-info text-white h-100 shadow-sm border-0">
                     <div class="card-body p-3 text-center">
-                        <small class="opacity-75">Laki-laki</small>
-                        <h2 id="dash-l" class="fw-bold m-0">0</h2>
+                        <small class="opacity-75 text-uppercase fw-bold" style="font-size:10px">Laki-laki</small>
+                        <h2 id="dash-l" class="fw-bold m-0 mt-1">0</h2>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card bg-danger text-white h-100 shadow-sm border-0">
                     <div class="card-body p-3 text-center">
-                        <small class="opacity-75">Perempuan</small>
-                        <h2 id="dash-p" class="fw-bold m-0">0</h2>
+                        <small class="opacity-75 text-uppercase fw-bold" style="font-size:10px">Perempuan</small>
+                        <h2 id="dash-p" class="fw-bold m-0 mt-1">0</h2>
                     </div>
                 </div>
             </div>
             <div class="col-6 col-lg-3">
                 <div class="card bg-secondary text-white h-100 shadow-sm border-0">
                     <div class="card-body p-3 text-center">
-                        <small class="opacity-75">Sekolah Input</small>
-                        <h2 id="dash-schools" class="fw-bold m-0">0</h2>
+                        <small class="opacity-75 text-uppercase fw-bold" style="font-size:10px">Progress Input</small>
+                        <h2 id="dash-schools" class="fw-bold m-0 mt-1">0</h2>
                     </div>
                 </div>
             </div>
@@ -142,9 +171,9 @@
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6">
                 <div class="card h-100 border-success shadow-sm">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <span class="small fw-bold"><i class="fas fa-check me-2"></i>SUDAH INPUT</span>
-                        <span class="badge bg-white text-success rounded-pill" id="count-sudah">0</span>
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-2">
+                        <span class="small fw-bold"><i class="fas fa-check-circle me-2"></i>SUDAH INPUT</span>
+                        <span class="badge bg-white text-success rounded-pill fw-bold" id="count-sudah">0</span>
                     </div>
                     <div class="card-body p-0 list-scroll">
                         <ul class="list-group list-group-flush" id="list-sudah"></ul>
@@ -153,9 +182,9 @@
             </div>
             <div class="col-12 col-md-6">
                 <div class="card h-100 border-danger shadow-sm">
-                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <span class="small fw-bold"><i class="fas fa-times me-2"></i>BELUM INPUT</span>
-                        <span class="badge bg-white text-danger rounded-pill" id="count-belum">0</span>
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center py-2">
+                        <span class="small fw-bold"><i class="fas fa-times-circle me-2"></i>BELUM INPUT</span>
+                        <span class="badge bg-white text-danger rounded-pill fw-bold" id="count-belum">0</span>
                     </div>
                     <div class="card-body p-0 list-scroll">
                         <ul class="list-group list-group-flush" id="list-belum"></ul>
@@ -166,7 +195,7 @@
 
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-light py-2 px-3 fw-bold small text-uppercase border-bottom">
-                <i class="fas fa-layer-group me-2"></i>Rekap Per Kelas
+                <i class="fas fa-layer-group me-2"></i>Rekap Per Tingkat Kelas
             </div>
             <div class="card-body p-0 table-responsive">
                 <table class="table table-bordered table-sm text-center mb-0 table-striped" id="table-grade">
@@ -184,13 +213,14 @@
 
         <div class="card shadow-sm border-0">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center border-bottom">
-                <span class="small fw-bold text-uppercase"><i class="fas fa-table me-2"></i>Data Lengkap</span>
-                <span class="badge bg-warning text-dark no-print" style="font-size: 10px;">Geser &raquo;</span>
+                <span class="small fw-bold text-uppercase"><i class="fas fa-table me-2"></i>Data Lengkap Per Sekolah</span>
+                <span class="badge bg-warning text-dark no-print border" style="font-size: 10px;">Geser Kanan &raquo;</span>
             </div>
             <div class="table-scroll-container">
                 <table class="table table-bordered table-hover table-sm text-center mb-0" id="table-master">
-                    <thead></thead><tbody></tbody>
-                </table>
+                    <thead></thead>
+                    <tbody></tbody>
+                    </table>
             </div>
         </div>
     </div>
@@ -200,7 +230,7 @@
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card shadow border-0">
                     <div class="card-header bg-primary text-white text-center py-3">
-                        <h5 class="mb-0">Login Operator</h5>
+                        <h5 class="mb-0 fw-bold">Login Sekolah</h5>
                     </div>
                     <div class="card-body p-4">
                         <button onclick="showPage('dashboard')" class="btn btn-sm btn-link mb-3 text-decoration-none ps-0 text-muted">
@@ -208,15 +238,15 @@
                         </button>
                         
                         <div class="mb-3">
-                            <label class="fw-bold small mb-1">Pilih Sekolah</label>
+                            <label class="fw-bold small mb-1">Pilih Sekolah Anda</label>
                             <select id="login-npsn" class="form-select form-select-lg"></select>
                         </div>
                         <div class="mb-4">
-                            <label class="fw-bold small mb-1">Token / Password</label>
+                            <label class="fw-bold small mb-1">Password / Token</label>
                             <input type="password" id="login-pass" class="form-control form-control-lg" placeholder="Masukkan token...">
                         </div>
                         <button onclick="loginProcess()" class="btn btn-primary w-100 btn-lg fw-bold shadow">
-                            MASUK <i class="fas fa-sign-in-alt ms-2"></i>
+                            MASUK SYSTEM <i class="fas fa-sign-in-alt ms-2"></i>
                         </button>
                     </div>
                 </div>
@@ -225,15 +255,16 @@
     </div>
 
     <div id="page-form" class="hidden">
+        
         <div class="sticky-form-header py-2 border-bottom mb-3 px-3">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="overflow-hidden">
-                    <h6 class="m-0 text-primary text-truncate fw-bold" id="form-school-name" style="max-width: 200px;">Sekolah</h6>
+                    <h6 class="m-0 text-primary text-truncate fw-bold" id="form-school-name" style="max-width: 200px;">Nama Sekolah</h6>
                 </div>
                 <div>
                     <button onclick="showPage('dashboard')" class="btn btn-outline-secondary btn-sm me-1">Batal</button>
                     <button onclick="submitData()" class="btn btn-success btn-sm px-3 fw-bold shadow-sm" id="btn-save-top">
-                        <i class="fas fa-save d-none d-sm-inline"></i> SIMPAN
+                        <i class="fas fa-save d-none d-sm-inline me-1"></i> SIMPAN
                     </button>
                 </div>
             </div>
@@ -245,8 +276,12 @@
                 <input type="hidden" id="input-nama">
                 <input type="hidden" id="input-pass">
 
-                <div class="alert alert-info py-2 px-3 small mb-3 border-0 shadow-sm">
-                    <i class="fas fa-info-circle me-1"></i> Data Gender (L+P) harus sama dengan Total Agama.
+                <div class="alert alert-info py-2 px-3 small mb-3 border-0 shadow-sm d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x me-3 text-info opacity-50"></i>
+                    <div>
+                        <strong>Petunjuk:</strong> Pastikan Jumlah Gender (L+P) sama dengan Total Agama.<br>
+                        Kotak akan berwarna <span class="badge bg-success">Hijau</span> jika data sinkron.
+                    </div>
                 </div>
 
                 <div class="accordion mb-4" id="accordionKelas">
@@ -254,7 +289,7 @@
 
                 <div class="d-grid gap-2 mb-5">
                     <button type="button" onclick="submitData()" class="btn btn-success btn-lg shadow fw-bold" id="btn-save-bottom">
-                        SIMPAN SEMUA DATA
+                        <i class="fas fa-save me-2"></i> SIMPAN SEMUA DATA
                     </button>
                 </div>
             </form>
@@ -264,12 +299,18 @@
 </div>
 
 <script>
-    // --- GANTI URL INI ---
+    // ==========================================================
+    // 1. KONFIGURASI API (GANTI URL DI BAWAH INI)
+    // ==========================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwdSmfNRko0h7CZKiI3Ge8po3JXKDDJLs_Kn2Ht5fEXBksTcGjMbUdChOTr1Dg1D-3Y/exec";
     
+    // Variabel Global
     let GLOBAL_DATA = { schools: [], rekap: [], config: {} };
     const ATTRIBUTES = ["L", "P", "Islam", "Kristen", "Katolik", "Hindu", "Buddha", "Konghucu"];
 
+    // ==========================================================
+    // 2. INIT & FETCH DATA
+    // ==========================================================
     window.onload = function() { fetchData(); };
 
     async function fetchData() {
@@ -278,6 +319,7 @@
             const data = await res.json();
             GLOBAL_DATA = data;
             
+            // Populate Dropdown Login
             const sel = document.getElementById('login-npsn');
             sel.innerHTML = '<option value="">-- Cari Nama Sekolah --</option>';
             data.schools.forEach(s => {
@@ -285,14 +327,24 @@
                 opt.value = s[0]; opt.text = s[1]; sel.add(opt);
             });
 
+            // Set Status Badge
             const badge = document.getElementById('statusBadge');
-            badge.innerText = (data.config.Status_Form === 'LOCKED') ? "LOCKED" : "OPEN";
-            badge.className = (data.config.Status_Form === 'LOCKED') ? "badge bg-danger shadow-sm" : "badge bg-light text-success shadow-sm";
+            if(data.config.Status_Form === 'LOCKED') {
+                badge.innerText = "LOCKED";
+                badge.className = "badge bg-danger shadow-sm";
+            } else {
+                badge.innerText = "OPEN";
+                badge.className = "badge bg-light text-success shadow-sm";
+            }
 
             renderDashboard();
             generateFormHTML();
-        } catch (e) { alert("Gagal koneksi. Coba refresh."); } 
-        finally { document.getElementById('loading').classList.add('hidden'); }
+        } catch (e) {
+            alert("Gagal mengambil data. Cek koneksi internet anda.");
+            console.error(e);
+        } finally {
+            document.getElementById('loading').classList.add('hidden');
+        }
     }
 
     function showPage(id) {
@@ -301,6 +353,9 @@
         window.scrollTo(0,0);
     }
 
+    // ==========================================================
+    // 3. RENDER DASHBOARD
+    // ==========================================================
     function renderDashboard() {
         renderStatusList();
         const rekap = GLOBAL_DATA.rekap;
@@ -315,6 +370,7 @@
             }
         });
         
+        // Update Kartu Ringkasan
         document.getElementById('dash-total').innerText = (totalL + totalP).toLocaleString();
         document.getElementById('dash-l').innerText = totalL.toLocaleString();
         document.getElementById('dash-p').innerText = totalP.toLocaleString();
@@ -324,6 +380,7 @@
         renderMasterTable(rekap);
     }
 
+    // List Sekolah Sudah/Belum
     function renderStatusList() {
         const submitted = GLOBAL_DATA.rekap.map(r => String(r.npsn));
         const ulSudah = document.getElementById('list-sudah');
@@ -332,13 +389,21 @@
         
         let cS = 0, cB = 0;
         GLOBAL_DATA.schools.forEach(s => {
+            // s[0] = NPSN, s[1] = Nama Sekolah
             if(submitted.includes(String(s[0]))) {
                 let r = GLOBAL_DATA.rekap.find(x => String(x.npsn) == String(s[0]));
                 let t = r ? new Date(r.data[3]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
-                ulSudah.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center small px-2 py-1"><span>${s[1]}</span><span class="badge bg-light text-dark border">${t}</span></li>`;
+                ulSudah.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center small px-2 py-1">
+                        <span class="text-truncate" style="max-width:70%">${s[1]}</span>
+                        <span class="badge bg-light text-dark border">${t}</span>
+                    </li>`;
                 cS++;
             } else {
-                ulBelum.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center small px-2 py-1"><span class="text-danger">${s[1]}</span></li>`;
+                ulBelum.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center small px-2 py-1">
+                        <span class="text-danger text-truncate">${s[1]}</span>
+                    </li>`;
                 cB++;
             }
         });
@@ -346,6 +411,7 @@
         document.getElementById('count-belum').innerText = cB;
     }
 
+    // Tabel Atas (Rekap Kelas)
     function renderGradeSummary(rekap) {
         const tbody = document.querySelector('#table-grade tbody');
         const tfoot = document.querySelector('#table-grade tfoot');
@@ -382,65 +448,113 @@
         </tr>`;
     }
 
+    // Tabel Bawah (Data Lengkap + Drill Down + Footer Sums)
     function renderMasterTable(rekap) {
         const table = document.getElementById('table-master');
         const thead = table.querySelector('thead');
         const tbody = table.querySelector('tbody');
-        thead.innerHTML = ''; tbody.innerHTML = '';
+        
+        let tfoot = table.querySelector('tfoot');
+        if (!tfoot) { tfoot = document.createElement('tfoot'); table.appendChild(tfoot); }
 
-        let r1 = `<tr><th rowspan="2" class="align-middle bg-light sticky-col" style="min-width:120px;">Sekolah</th>`;
-        let r2 = `<tr>`;
+        thead.innerHTML = ''; tbody.innerHTML = ''; tfoot.innerHTML = '';
+
+        // 1. Prepare Vertical Sums
+        let verticalSums = {};
         for(let i=1; i<=6; i++) {
-            r1 += `<th colspan="8" class="bg-secondary text-white small border-start">KELAS ${i}</th>`;
+            ATTRIBUTES.forEach(a => verticalSums[`k${i}_${a}`] = 0);
+            verticalSums[`k${i}_TOTAL`] = 0; 
+        }
+        let grandL=0, grandP=0, grandAll=0;
+
+        // 2. Generate Header
+        let r1 = `<tr><th rowspan="2" class="align-middle bg-light sticky-col" style="min-width:120px;">Nama Sekolah</th>`;
+        let r2 = `<tr>`;
+        
+        for(let i=1; i<=6; i++) {
+            r1 += `<th colspan="9" class="bg-secondary text-white small border-start">KELAS ${i}</th>`;
             ATTRIBUTES.forEach(a => {
                 let lbl = (window.innerWidth < 768) ? a.substring(0,3) : a;
                 let c = (a=='L'||a=='P')?'bg-gender':'bg-agama';
                 r2 += `<th class="${c}" style="font-size:10px;">${lbl}</th>`;
             });
+            r2 += `<th class="bg-subtotal" style="font-size:10px;">JML</th>`;
         }
-        r1 += `<th colspan="3" class="bg-dark text-white border-start">TOTAL</th></tr>`;
+        r1 += `<th colspan="3" class="bg-dark text-white border-start">TOTAL SEKOLAH</th></tr>`;
         r2 += `<th class="bg-gender">L</th><th class="bg-gender">P</th><th class="bg-dark text-white">ALL</th></tr>`;
         thead.innerHTML = r1 + r2;
 
+        // 3. Generate Body
         rekap.forEach(r => {
             const d = r.data;
-            let tr = `<tr><td class="text-start sticky-col bg-light small fw-bold">${d[2]}</td>`;
-            let gL=0, gP=0;
+            let tr = `<tr><td class="text-start sticky-col bg-light small fw-bold text-truncate" style="max-width:150px;">${d[2]}</td>`;
+            let rowL=0, rowP=0;
+
             for(let i=1; i<=6; i++) {
                 let s = 4 + ((i-1)*8);
+                let classSub = 0;
                 ATTRIBUTES.forEach((a,k) => {
                     let val = parseInt(d[s+k]||0);
-                    if(a=='L') gL+=val; if(a=='P') gP+=val;
+                    verticalSums[`k${i}_${a}`] += val; // Add to vert sum
+                    
+                    if(a=='L') { classSub+=val; rowL+=val; }
+                    if(a=='P') { classSub+=val; rowP+=val; }
+
                     let cls = (val==0)?'text-muted text-opacity-25':'fw-bold';
                     if(a=='L'||a=='P') cls += ' bg-gender';
                     tr += `<td class="${cls}">${val}</td>`;
                 });
+                // Cell Total Kelas
+                verticalSums[`k${i}_TOTAL`] += classSub;
+                tr += `<td class="bg-subtotal border-end">${classSub}</td>`;
             }
-            tr += `<td class="fw-bold border-start">${gL}</td><td class="fw-bold">${gP}</td><td class="bg-dark text-white fw-bold">${gL+gP}</td></tr>`;
+            // Cell Total Sekolah
+            grandL += rowL; grandP += rowP; grandAll += (rowL+rowP);
+            tr += `<td class="fw-bold border-start bg-gender">${rowL}</td><td class="fw-bold bg-gender">${rowP}</td><td class="bg-dark text-white fw-bold">${rowL+rowP}</td></tr>`;
             tbody.innerHTML += tr;
         });
+
+        // 4. Generate Footer (Vertical Sums)
+        let tf = `<tr><td class="sticky-col text-uppercase">TOTAL KECAMATAN</td>`;
+        for(let i=1; i<=6; i++) {
+            ATTRIBUTES.forEach(a => tf += `<td>${verticalSums[`k${i}_${a}`]}</td>`);
+            tf += `<td class="bg-warning text-dark border-end" style="font-weight:900">${verticalSums[`k${i}_TOTAL`]}</td>`;
+        }
+        tf += `<td class="bg-warning text-dark border-start">${grandL}</td><td class="bg-warning text-dark">${grandP}</td><td class="bg-warning text-dark" style="font-size:1.1em">${grandAll}</td></tr>`;
+        tfoot.innerHTML = tf;
     }
 
+    // ==========================================================
+    // 4. FORM & LOGIN LOGIC
+    // ==========================================================
     function loginProcess() {
         const npsn = document.getElementById('login-npsn').value;
         const pass = document.getElementById('login-pass').value;
         const name = document.getElementById('login-npsn').options[document.getElementById('login-npsn').selectedIndex].text;
-        if(!npsn || !pass) return alert("Pilih sekolah & isi password!");
+        
+        if(!npsn || !pass) return alert("Harap pilih sekolah dan isi password/token!");
         
         document.getElementById('input-npsn').value = npsn;
         document.getElementById('input-pass').value = pass;
         document.getElementById('input-nama').value = name;
         document.getElementById('form-school-name').innerText = name;
+        
+        // Reset
         document.querySelectorAll('#dataForm input[type="number"]').forEach(i => i.value = 0);
         
+        // Fill Data Lama (Jika Ada)
         const exist = GLOBAL_DATA.rekap.find(r => String(r.npsn) === String(npsn));
         if(exist) {
             let idx = 4;
             for(let i=1; i<=6; i++) {
                 ATTRIBUTES.forEach(a => { document.getElementById(`k${i}_${a}`).value = exist.data[idx]||0; idx++; });
             }
+            // Trigger calculation
+            for(let i=1; i<=6; i++) calculateClass(i);
         }
+        
         showPage('form');
+        // Initial calc for visual (badges)
         for(let i=1; i<=6; i++) calculateClass(i);
     }
 
@@ -450,21 +564,31 @@
             let html = `
             <div class="accordion-item shadow-sm mb-3 border-0">
                 <h2 class="accordion-header">
-                    <button class="accordion-button ${i!=1?'collapsed':''} bg-light text-dark fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#col${i}">
-                        <div class="d-flex w-100 justify-content-between align-items-center me-2"><span>Kelas ${i}</span><span class="badge bg-secondary" id="bdg${i}">Total: 0</span></div>
+                    <button class="accordion-button ${i!=1?'collapsed':''} bg-white text-dark fw-bold border-bottom" type="button" data-bs-toggle="collapse" data-bs-target="#col${i}">
+                        <div class="d-flex w-100 justify-content-between align-items-center me-2">
+                            <span><i class="fas fa-users me-2 text-primary"></i>Kelas ${i}</span>
+                            <span class="badge bg-secondary" id="bdg${i}">Total: 0</span>
+                        </div>
                     </button>
                 </h2>
                 <div id="col${i}" class="accordion-collapse collapse ${i==1?'show':''}" data-bs-parent="#accordionKelas">
-                    <div class="accordion-body p-3">
-                        <div class="d-flex justify-content-between text-center mb-3 bg-white border rounded p-2 small">
+                    <div class="accordion-body p-3 bg-light">
+                        <div class="d-flex justify-content-between text-center mb-3 bg-white border rounded p-2 small shadow-sm">
                             <div class="w-50 border-end">Gender (L+P)<br><strong id="tg${i}" class="fs-6">0</strong></div>
-                            <div class="w-50">Agama<br><strong id="ta${i}" class="fs-6">0</strong></div>
+                            <div class="w-50">Total Agama<br><strong id="ta${i}" class="fs-6">0</strong></div>
                         </div>
-                        <div id="mon${i}" class="alert py-1 text-center small mb-3 hidden"></div>
+                        <div id="mon${i}" class="alert py-2 text-center small mb-3 hidden fw-bold"></div>
+                        
                         <div class="row g-2">`;
             ATTRIBUTES.forEach(a => {
                 let bg = (a=='L'||a=='P')?'bg-gender border-primary':'bg-agama border-warning';
-                html += `<div class="col-6 col-md-3"><label class="small text-muted fw-bold">${a}</label><input type="number" id="k${i}_${a}" class="form-control text-center fw-bold ${bg}" inputmode="numeric" pattern="[0-9]*" min="0" value="0" oninput="calculateClass(${i})"></div>`;
+                // Inputmode numeric sangat penting untuk HP
+                html += `
+                <div class="col-6 col-md-3">
+                    <label class="small text-muted fw-bold mb-1">${a}</label>
+                    <input type="number" id="k${i}_${a}" class="form-control text-center fw-bold ${bg}" 
+                           inputmode="numeric" pattern="[0-9]*" min="0" value="0" oninput="calculateClass(${i})">
+                </div>`;
             });
             c.innerHTML += html + `</div></div></div></div>`;
         }
@@ -474,58 +598,92 @@
         let l = parseInt(document.getElementById(`k${i}_L`).value)||0;
         let p = parseInt(document.getElementById(`k${i}_P`).value)||0;
         let tg = l+p;
-        let ta = 0; ["Islam","Kristen","Katolik","Hindu","Buddha","Konghucu"].forEach(a => ta += parseInt(document.getElementById(`k${i}_${a}`).value)||0);
-        document.getElementById(`tg${i}`).innerText = tg; document.getElementById(`ta${i}`).innerText = ta;
+        let ta = 0; 
+        ["Islam","Kristen","Katolik","Hindu","Buddha","Konghucu"].forEach(a => {
+            ta += parseInt(document.getElementById(`k${i}_${a}`).value)||0;
+        });
+
+        document.getElementById(`tg${i}`).innerText = tg;
+        document.getElementById(`ta${i}`).innerText = ta;
         document.getElementById(`bdg${i}`).innerText = "Total: " + tg;
 
         const mon = document.getElementById(`mon${i}`);
         if(tg !== ta) {
             mon.classList.remove('hidden', 'alert-success'); mon.classList.add('alert-danger');
-            mon.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Jumlah Tidak Sama!";
+            mon.innerHTML = "<i class='fas fa-exclamation-triangle me-1'></i> JUMLAH TIDAK SAMA!";
         } else if (tg > 0) {
             mon.classList.remove('hidden', 'alert-danger'); mon.classList.add('alert-success');
-            mon.innerHTML = "<i class='fas fa-check'></i> Sinkron";
-        } else { mon.classList.add('hidden'); }
+            mon.innerHTML = "<i class='fas fa-check-circle me-1'></i> DATA SINKRON";
+        } else {
+            mon.classList.add('hidden');
+        }
     }
 
+    // ==========================================================
+    // 5. SUBMIT & EXPORT
+    // ==========================================================
     async function submitData() {
-        if(!confirm("Yakin data sudah benar?")) return;
+        if(!confirm("Apakah data sudah benar dan lengkap? \nKlik OK untuk Menyimpan.")) return;
+        
         const btns = [document.getElementById('btn-save-top'), document.getElementById('btn-save-bottom')];
-        btns.forEach(b => {b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin"></i>'});
+        btns.forEach(b => {b.disabled=true; b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending...'});
         
         let formData = {};
         document.querySelectorAll('#dataForm input[type="number"]').forEach(i => formData[i.id] = i.value);
         
         try {
-            const req = await fetch(API_URL, { method:'POST', body: JSON.stringify({
-                npsn: document.getElementById('input-npsn').value,
-                password: document.getElementById('input-pass').value,
-                nama_sekolah: document.getElementById('input-nama').value,
-                formData: formData
-            })});
+            const req = await fetch(API_URL, { 
+                method:'POST', 
+                body: JSON.stringify({
+                    npsn: String(document.getElementById('input-npsn').value), // Force String
+                    password: document.getElementById('input-pass').value,
+                    nama_sekolah: document.getElementById('input-nama').value,
+                    formData: formData
+                })
+            });
             const res = await req.json();
-            if(res.status == 'success') { alert("Berhasil Disimpan!"); location.reload(); }
-            else { alert("Gagal: " + res.message); btns.forEach(b => {b.disabled=false; b.innerText="SIMPAN";}); }
-        } catch(e) { alert("Error: "+e); btns.forEach(b => {b.disabled=false; b.innerText="SIMPAN";}); }
+            
+            if(res.status == 'success') { 
+                alert("ALHAMDULILLAH! Data Berhasil Disimpan."); 
+                location.reload(); 
+            } else { 
+                alert("GAGAL: " + res.message); 
+                btns.forEach(b => {b.disabled=false; b.innerText="SIMPAN";}); 
+            }
+        } catch(e) { 
+            alert("Error Jaringan: "+e); 
+            btns.forEach(b => {b.disabled=false; b.innerText="SIMPAN";}); 
+        }
     }
 
     function exportExcel() {
         const wb = XLSX.utils.book_new();
+        
+        // Sheet 1: Data Lengkap
         XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('table-master')), "Data Lengkap");
+        
+        // Sheet 2: Rekap Kelas
         XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(document.getElementById('table-grade')), "Rekap Kelas");
         
-        let statusData = [["NPSN", "Nama Sekolah", "Status", "Waktu"]];
+        // Sheet 3: Status Pengiriman
+        let statusData = [["NPSN", "Nama Sekolah", "Status", "Waktu Update"]];
         const sub = GLOBAL_DATA.rekap.map(r => String(r.npsn));
         GLOBAL_DATA.schools.forEach(s => {
             let stat="BELUM", t="-";
-            if(sub.includes(String(s[0]))) { stat="SUDAH"; t=new Date(GLOBAL_DATA.rekap.find(x=>String(x.npsn)==String(s[0])).data[3]).toLocaleString(); }
+            if(sub.includes(String(s[0]))) { 
+                stat="SUDAH"; 
+                let r = GLOBAL_DATA.rekap.find(x=>String(x.npsn)==String(s[0]));
+                t = new Date(r.data[3]).toLocaleString(); 
+            }
             statusData.push([s[0], s[1], stat, t]);
         });
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(statusData), "Status");
-        XLSX.writeFile(wb, 'Rekap_Selogiri_2026.xlsx');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(statusData), "Status Input");
+        
+        XLSX.writeFile(wb, 'Rekap_Siswa_Selogiri_2026.xlsx');
     }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
